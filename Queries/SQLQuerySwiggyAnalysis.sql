@@ -263,3 +263,138 @@ JOIN dim_date d ON f.date_id = d.date_id
 GROUP BY Year, Quater
 ORDER BY COUNT(*) DESC
 
+-- Quaterly Revenue Trends
+SELECT 
+	Year,
+	Quater,
+	FORMAT(SUM(CONVERT(FLOAT, Price_INR))/1000000, 'N2')+ ' INR' AS Total_Revenue
+FROM fact_swiggy_orders f
+JOIN dim_date d ON f.date_id = d.date_id
+GROUP BY Year,
+		Quater
+ORDER BY Total_Revenue DESC
+
+--Order by Day of Week (Mon-Sun)
+SELECT
+	DATENAME(WEEKDAY,d.full_date) AS day_name,
+	COUNT(*) AS total_orders
+FROM fact_swiggy_orders f
+JOIN dim_date d ON f.date_id = d.date_id
+GROUP BY DATENAME(WEEKDAY,d.full_date)
+ORDER BY total_orders DESC
+
+--location base analysis
+-- top 10 cities by order volume
+SELECT TOP 10
+	l.city,
+	COUNT(*) As Total_Orders
+FROM fact_swiggy_orders f
+JOIN dim_location l 
+ON l.location_id = f.location_id
+GROUP BY l.city
+ORDER BY Total_Orders DESC
+
+-- Bottom 10 cities by order volume
+SELECT TOP 10
+	l.city,
+	COUNT(*) As Total_Orders
+FROM fact_swiggy_orders f
+JOIN dim_location l 
+ON l.location_id = f.location_id
+GROUP BY l.city
+ORDER BY Total_Orders ASC
+
+--Revenue Contribution by States
+SELECT 
+	l.State,
+	FORMAT(SUM(CONVERT(FLOAT, f.Price_INR))/1000000, 'N2') +' INR' AS Total_Revenue
+FROM fact_swiggy_orders f
+JOIN dim_location l
+ON f.location_id = l.location_id
+GROUP BY l.State
+ORDER BY Total_Revenue DESC
+
+--Top 10 Restaurants by orders
+SELECT TOP 10
+	r.Restaurant_Name,
+	COUNT(*) AS Total_Orders
+FROM fact_swiggy_orders f
+JOIN dim_restaurant r
+ON f.restaurant_id = r.restaurant_id
+GROUP BY r.Restaurant_Name
+ORDER BY Total_Orders DESC
+
+--Top 10 Restaurant by revenue
+SELECT TOP 10
+	r.Restaurant_Name,
+	FORMAT(SUM(CONVERT(FLOAT, Price_INR))/1000000, 'N2')+' INR' AS Total_Revenue
+FROM fact_swiggy_orders f
+JOIN dim_restaurant r
+ON f.restaurant_id = r.restaurant_id
+GROUP BY r.Restaurant_Name
+ORDER BY Total_Revenue DESC
+
+--Top categories by order volume
+SELECT
+	c.category,
+	COUNT(*) AS Total_Orders
+FROM fact_swiggy_orders f
+JOIN dim_category c
+ON f.category_id = c.category_id
+GROUP BY c.category
+ORDER BY COUNT(*) DESC
+
+--Most Ordered Dishes
+SELECT 
+	dsh.Dish_Name,
+	COUNT(*) AS Total_Orders
+FROM fact_swiggy_orders f
+JOIN dim_dish dsh
+ON f.dish_id = dsh.dish_id
+GROUP BY dsh.Dish_Name
+ORDER BY Total_Orders DESC
+
+--Cuisine Performance (Orders + Avg Rating)
+SELECT 
+	c.category,
+	COUNT(*) AS Total_Orders,
+	FORMAT(AVG(Rating), 'N2') AS Average_Rating
+FROM fact_swiggy_orders f
+JOIN dim_category c
+ON f.category_id = c.category_id
+GROUP BY c.category
+ORDER BY Total_Orders DESC
+
+--Customer Spending Insights
+--Total Order By Price range
+SELECT
+	CASE	
+		WHEN Price_INR <100 THEN 'Under 100'
+		WHEN Price_INR BETWEEN 100 AND 199 THEN '100-199'
+		WHEN Price_INR BETWEEN 200 AND 299 THEN '200-299'
+		WHEN Price_INR BETWEEN 300 AND 399 THEN '300-399'
+		WHEN Price_INR BETWEEN 400 AND 499 THEN '400-499'
+		ELSE '500+'
+	END AS price_range,
+	COUNT(*) AS Total_Orders
+	
+FROM fact_swiggy_orders 
+GROUP BY 	
+	CASE	
+		WHEN Price_INR <100 THEN 'Under 100'
+		WHEN Price_INR BETWEEN 100 AND 199 THEN '100-199'
+		WHEN Price_INR BETWEEN 200 AND 299 THEN '200-299'
+		WHEN Price_INR BETWEEN 300 AND 399 THEN '300-399'
+		WHEN Price_INR BETWEEN 400 AND 499 THEN '400-499'
+		ELSE '500+'
+	END
+ORDER BY Total_Orders DESC
+
+-- Rating Count Distribution (1-5)
+SELECT
+	rating,
+	COUNT(*) AS rating_count
+FROM fact_swiggy_orders
+GROUP BY rating
+ORDER BY rating_count DESC
+
